@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "bootstrap": "^4.6.0",
+    "bootstrap-vue": "^2.21.2",
     "js-cookie": "^2.2.0",
-    "vue": "^2.5.17",
+    "vue": "^2.6.12",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
   },
@@ -18,7 +20,8 @@
     "@vue/cli-plugin-babel": "^3.0.0-rc.12",
     "@vue/cli-plugin-eslint": "^3.0.0-rc.12",
     "@vue/cli-service": "^3.0.0-rc.12",
-    "vue-template-compiler": "^2.5.17"
+    "vue": "2.0.8",
+    "vue-template-compiler": "^2.1.8"
   },
   "babel": {
     "presets": [
