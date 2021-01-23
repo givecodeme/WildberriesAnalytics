@@ -27,7 +27,7 @@ SECRET_KEY = 'verybadsecret!!!'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-
+test = 12313
 # Application definition
 
 INSTALLED_APPS = [
