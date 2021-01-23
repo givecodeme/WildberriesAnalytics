@@ -1,13 +1,13 @@
 from django.db import models
-from rest_framework import serializers
 
 
-class Message(models.Model):
-    subject = models.CharField(max_length=200)
-    body = models.TextField()
+class Todos(models.Model):
+    title = models.CharField(max_length=250)
+    completed = models.BooleanField(default=False)
 
-
-class MessageSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Message
-        fields = ('url', 'subject', 'body', 'pk')
+        verbose_name = ("todos")
+        verbose_name_plural = ("todoss")
+
+    def __str__(self):
+        return self.title
