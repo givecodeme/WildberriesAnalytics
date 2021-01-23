@@ -4,10 +4,10 @@ import App from '@/App.vue'
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-import axios from 'axios'
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 
+import axios from 'axios'
 axios.defaults.baseURL = '/api/'
 
 Vue.config.productionTip = false
