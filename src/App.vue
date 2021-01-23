@@ -3,7 +3,6 @@
     <b-container class="w-50">
       <img alt="Vue logo" src="./assets/logo.png" />
 
-      <!-- class="border-success" -->
       <b-form-input
         class="shadow-success"
         v-model="search"
@@ -11,7 +10,9 @@
         @input="searchSubmit"
       />
 
-      <b-button v-b-modal.modal-1 variant="primary">Create ToDo</b-button>
+      <b-button v-b-modal.modal-1 variant="primary" class="my-3"
+        >Create ToDo</b-button
+      >
 
       <b-modal id="modal-1" title="Create ToDo">
         <b-form @submit.prevent="createTodo">
