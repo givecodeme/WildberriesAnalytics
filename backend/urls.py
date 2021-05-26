@@ -1,24 +1,16 @@
-"""project URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.1/topics/http/urls/
-"""
-
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
-from .api.views import index_view, TodosViewSet
+from .api.views import index_view, SalesViewSet, add_sales
+from backend.api.views import OrdersViewSet, ProductsViewSet, StockViewSet, add_orders, add_products, add_stocks
 
-router = routers.DefaultRouter()
-router.register('todos', TodosViewSet)
+import debug_toolbar
+
 
 urlpatterns = [
-
     path('', index_view, name='index'),
 
-    # http://localhost:8000/api/<router-viewsets>
-    path('api/', include(router.urls)),
+    path('__debug__/', include(debug_toolbar.urls)),
 
-    # http://localhost:8000/api/admin/
     path('api/admin/', admin.site.urls),
+    path('api/', include('backend.api.urls')),
 ]
