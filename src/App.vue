@@ -1,63 +1,61 @@
 <template>
-  <div id="">
-    <div>
-      <b-navbar toggleable="lg" type="dark" variant="dark">
-        <b-navbar-brand :to="{ name: 'list' }">NavBar</b-navbar-brand>
+  <div id="app">
+    <b-container class="w-50">
+      <img alt="Vue logo" src="./assets/logo.png" />
 
-        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+      <b-form-input
+        class="shadow-success"
+        v-model="search"
+        placeholder="Search"
+        @input="searchSubmit"
+      />
 
-        <b-collapse id="nav-collapse" is-nav>
-          <b-navbar-nav>
-            <b-nav-item href="#">Link</b-nav-item>
-            <b-nav-item href="#" disabled>Disabled</b-nav-item>
-          </b-navbar-nav>
-          <!-- Right aligned nav items -->
-          <b-navbar-nav class="ml-auto">
-            <b-nav-item-dropdown right>
-              <!-- Using 'button-content' slot -->
-              <template #button-content>
-                <em>User</em>
-              </template>
-              <b-dropdown-item v-if="isLoggedIn" :to="{ name: 'profile' }"
-                >Profile</b-dropdown-item
-              ><b-dropdown-item v-if="isLoggedIn" @click="logout()"
-                >Log Out</b-dropdown-item
-              >
-              <b-dropdown-item
-                v-if="!isLoggedIn"
-                :to="{
-                  name: 'signIn',
-                }"
-                >Sign In</b-dropdown-item
-              >
+      <b-button v-b-modal.modal-1 variant="primary" class="my-3"
+        >Create ToDo</b-button
+      >
 
-              <b-dropdown-item
-                v-if="!isLoggedIn"
-                :to="{
-                  name: 'signUp',
-                }"
-                >Register</b-dropdown-item
-              >
-            </b-nav-item-dropdown>
-          </b-navbar-nav>
-        </b-collapse>
-      </b-navbar>
-    </div>
+      <b-modal id="modal-1" title="Create ToDo">
+        <b-form @submit.prevent="createTodo">
+          <b-form-input placeholder="Title" v-model="title" />
+          <b-button type="submit">Create</b-button>
+        </b-form>
+      </b-modal>
 
-    <b-container fluid id="app">
-      <router-view />
+      <h2 v-if="!todos.length">Not Found</h2>
+
+      <div v-else>
+        <card
+          :todo="todo"
+          v-for="(todo, index) in todos"
+          :key="todo.id"
+          @deleteTodo="deleteTodo(todo.id, index)"
+        />
+
+        <!-- page-class="page" -->
+        <b-pagination
+          v-if="pages > 1"
+          pills
+          last-number
+          v-model="currentPage"
+          :total-rows="pages"
+          :per-page="1"
+          align="center"
+          @change="changePage"
+        />
+      </div>
     </b-container>
   </div>
 </template>
 
 <script>
-// import Card from "@/components/Card.vue";
+import axios from "axios";
+import Card from "@/components/Card.vue";
 
-import { mapGetters, mapActions } from "vuex";
+// axios.defaults.baseURL = "http://127.0.0.1:8000/";
 
 export default {
   name: "App",
-  // components: { Card },
+  components: { Card },
   data: () => ({
     search: "",
     todos: [],
@@ -66,10 +64,57 @@ export default {
     pages: 10,
   }),
   methods: {
-    ...mapActions(["logout"]),
+    searchSubmit() {
+      axios
+        .get("todos/", {
+          params: {
+            search: this.search,
+          },
+        })
+        .then((res) => {
+          this.currentPage = 1;
+          this.todos = res.data.results;
+          this.pages = res.data.pages;
+        });
+    },
+
+    createTodo() {
+      axios
+        .post("todos/", {
+          title: this.title,
+        })
+        .then((res) => {
+          if (this.todos.length == 3) {
+            this.todos.splice(-1, 1);
+          }
+          this.todos.unshift(res.data);
+          this.$bvModal.hide("modal-1");
+          this.title = "";
+        });
+    },
+    deleteTodo(id, index) {
+      axios.delete(`todos/${id}/`).then(() => {
+        this.todos.splice(index, 1);
+      });
+    },
+    changePage(newPage) {
+      axios
+        .get("todos/", {
+          params: {
+            page: newPage,
+            search: this.search,
+          },
+        })
+        .then((res) => {
+          this.todos = res.data.results;
+        });
+    },
   },
-  computed: {
-    ...mapGetters(["isLoggedIn"]),
+  mounted() {
+    axios.get("todos/").then((res) => {
+      this.todos = res.data.results;
+      this.pages = res.data.pages;
+    });
   },
 };
 </script>

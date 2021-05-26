@@ -11,15 +11,7 @@ whitenoise = "==4.0"
 dj-database-url = "*"
 psycopg2-binary = "*"
 django-cors-headers = "*"
-requests="*"
-django-extensions="*"
-lxml="*"
-beautifulsoup4="*"
 
-django-debug-toolbar="*"
-djangorestframework-jwt = "*"
-
-django-filter="*"
 [dev-packages]
 
 [requires]
