@@ -8,7 +8,7 @@ from .views import (
     OrdersViewSet, ProductsViewSet,
     StockViewSet, add_orders, add_products, add_stocks
 )
-from backend.api.views import FeeViewSet, TokenViewSet, add_comission
+from backend.api.views import FeeViewSet, TokenViewSet, add_comission, tess
 router = routers.DefaultRouter()
 router.register('sales', SalesViewSet)
 router.register('orders', OrdersViewSet)
@@ -26,6 +26,7 @@ urlpatterns = [
     path('add_prod', add_products,),
     path('add_stocks', add_stocks,),
     path('add_com', add_comission),
+    path('tess', tess),
 
     path('auth/', include('djoser.urls')),
     path('token/', TokenObtainPairView.as_view()),

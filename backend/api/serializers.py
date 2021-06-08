@@ -52,7 +52,7 @@ class SaleProductSerializer(ModelSerializer):
 class TokenSerializer(ModelSerializer):
     class Meta:
         model = Token
-        fields = ('apiKey',)
+        fields = ('apiKey', 'id', )
 
 
 class ProductsSerializer(ModelSerializer):

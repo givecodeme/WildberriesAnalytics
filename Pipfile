@@ -15,11 +15,13 @@ requests="*"
 django-extensions="*"
 lxml="*"
 beautifulsoup4="*"
-
 django-debug-toolbar="*"
 djangorestframework-jwt = "*"
-
 django-filter="*"
+celery = {extras = ["redis"], version = "*"}
+django-celery-beat = "*"
+django-celery-results = "*"
+
 [dev-packages]
 
 [requires]

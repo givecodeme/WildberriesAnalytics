@@ -2,14 +2,16 @@
   <div id="">
     <div>
       <b-navbar toggleable="lg" type="dark" variant="dark">
-        <b-navbar-brand :to="{ name: 'list' }">NavBar</b-navbar-brand>
+        <b-navbar-brand :to="{ name: 'list' }"
+          >WildberriesAnalytics</b-navbar-brand
+        >
 
         <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
 
         <b-collapse id="nav-collapse" is-nav>
           <b-navbar-nav>
-            <b-nav-item href="#">Link</b-nav-item>
-            <b-nav-item href="#" disabled>Disabled</b-nav-item>
+            <b-nav-item :to="{ name: 'token' }">Token</b-nav-item>
+            <!-- <b-nav-item href="#" disabled>Disabled</b-nav-item> -->
           </b-navbar-nav>
           <!-- Right aligned nav items -->
           <b-navbar-nav class="ml-auto">
@@ -58,13 +60,7 @@ import { mapGetters, mapActions } from "vuex";
 export default {
   name: "App",
   // components: { Card },
-  data: () => ({
-    search: "",
-    todos: [],
-    title: "",
-    currentPage: 1,
-    pages: 10,
-  }),
+  data: () => ({}),
   methods: {
     ...mapActions(["logout"]),
   },
@@ -93,3 +89,4 @@ export default {
   border-color: #28a745;
 }
 </style>
+

@@ -60,10 +60,14 @@
 
       <b-table
         id="table-transition-example"
+        class="mt-3"
+        :tbody-transition-props="transProps"
         :fields="fields"
         :items="products"
-        class="mt-3"
         primary-key="nmid"
+        hover
+        striped
+        :busy="isBusy"
       >
         <!-- <br />
           <span v-for="(stock, index) in data.item.stocks" :key="index">
@@ -78,10 +82,12 @@
           <p>{{ data.item.orders_qnt }} шт.</p>
         </template>
 
-        <template #cell(delivery_sum)="data">
-          доставка - {{ data.value | format }} р.
+        <template #cell(tax)="data">
+          {{ data.value | format }} р.
+
+          <!-- доставка - {{ data.item.delivery_sum | format }} р.
           <br />
-          комиссия - {{ data.item.com_sum | format }} р.
+          комиссия - {{ data.item.com_sum | format }} р. -->
         </template>
 
         <template #cell(sales_sum)="data">
@@ -91,7 +97,7 @@
 
         <template #cell(sebes)="data">
           <div class="">
-            <sebes :prod_id="data.item.id" />
+            <sebes :prod_id="data.item.id" :prop_sebes="data.value" />
           </div>
         </template>
 
@@ -100,6 +106,22 @@
           <br />
           <a :href="data.item.wb_url" target="_blank"> {{ data.item.nmid }}</a>
         </template>
+
+        <template #cell(income)="data">
+          {{ data.value | format }} р.
+          <!-- <dohod
+            :sales="data.item.sales_sum"
+            :tax="data.item.delivery_sum + data.item.com_sum"
+            :sebes="data.item.sebes * data.item.sales_qnt"
+          /> -->
+        </template>
+
+        <template #table-busy>
+          <div class="text-center text-danger my-2">
+            <b-spinner class="align-middle"></b-spinner>
+            <strong>Loading...</strong>
+          </div>
+        </template>
       </b-table>
     </b-container>
   </div>
@@ -107,12 +129,14 @@
 
 <script>
 import axios from "axios";
+import api from "@/services/api";
 import Card from "@/components/Card.vue";
 import Sebes from "../components/Sebes.vue";
+import Dohod from "../components/Dohod.vue";
 // import Sebes from "@/components/Sebes.vue";
 // import api from "@/services/api";
 export default {
-  components: { Card, Sebes },
+  components: { Card, Sebes, Dohod },
   filters: {
     format: (val) => `${val}`.replace(/(\d)(?=(\d{3})+([^\d]|$))/g, "$1 "),
   },
@@ -120,6 +144,11 @@ export default {
     return {
       products: [],
       date: this.$route.query.date || "",
+      isBusy: true,
+      transProps: {
+        // Transition name
+        name: "flip-list",
+      },
       fields: [
         {
           key: "image",
@@ -150,9 +179,10 @@ export default {
           sortable: true,
         },
         {
-          key: "delivery_sum",
+          key: "tax",
           label: "Расходы",
           sortable: true,
+          formatter: (value, key, item) => item.delivery_sum + item.com_sum,
         },
         {
           key: "sales_sum",
@@ -164,69 +194,75 @@ export default {
           // label: "Выкуплено",
           sortable: true,
         },
+        {
+          key: "income",
+          label: "Доход",
+          sortable: true,
+          formatter: (value, key, item) =>
+            (
+              item.sales_sum -
+              item.delivery_sum -
+              item.com_sum -
+              item.sebes * item.sales_qnt -
+              item.sales_sum * 0.06
+            ).toFixed(0),
+          sortByFormatted: true,
+
+          // this.sales - this.tax - this.sales * 0.06 - this.sebes
+          // `${val}`.replace(/(\d)(?=(\d{3})+([^\d]|$))/g, "$1 "),
+        },
       ],
     };
   },
   watch: {
     "$route.query.date"(date) {
+      this.isBusy = !this.isBusy;
+
       axios
         .get("products/", {
           params: {
             date: date,
-            ordering: "-sum_orders",
+          },
+
+          headers: {
+            Authorization: localStorage.getItem("token"),
           },
         })
         .then((result) => {
-          this.products = result.data;
+          this.products = result.data.sort((a, b) => b.sales_sum - a.sales_sum);
+          this.isBusy = !this.isBusy;
         });
     },
 
-    orderingByOrders(newVal) {
-      if (newVal)
-        this.products = this.products.sort(
-          (a, b) => b.orders_sum - a.orders_sum
-        );
-      else
-        this.products = this.products.sort(
-          (a, b) => a.orders_sum - b.orders_sum
-        );
-    },
-    orderingBySales(newVal) {
-      if (newVal)
-        this.products = this.products.sort((a, b) => b.sales_sum - a.sales_sum);
-      else
-        this.products = this.products.sort((a, b) => a.sales_sum - b.sales_sum);
-    },
-  },
-
-  methods: {
-    sortByOrders() {
-      this.products = this.products.sort((a, b) => b.orders_sum - a.orders_sum);
-    },
-
-    Ordering() {
-      // var column =
-    },
-    sortBy(val) {
-      this.products = this.products.sort((a, b) => (a[val] > b[val] ? -1 : 1));
-    },
-    changeSebes(id) {
-      axios.post(`products/${id}`, {
-        Sebes: 123,
-      });
-    },
+    // orderingByOrders(newVal) {
+    //   if (newVal)
+    //     this.products = this.products.sort(
+    //       (a, b) => b.orders_sum - a.orders_sum
+    //     );
+    //   else
+    //     this.products = this.products.sort(
+    //       (a, b) => a.orders_sum - b.orders_sum
+    //     );
+    // },
+    // orderingBySales(newVal) {
+    //   if (newVal)
+    //     this.products = this.products.sort((a, b) => b.sales_sum - a.sales_sum);
+    //   else
+    //     this.products = this.products.sort((a, b) => a.sales_sum - b.sales_sum);
+    // },
   },
 
   mounted() {
-    axios
+    api
       .get("products/", {
         params: {
           date: this.date,
-          ordering: "-sum_orders",
+          // ordering: "-sum_orders",
         },
       })
       .then((result) => {
-        this.products = result.data;
+        this.products = result.data.sort((a, b) => b.sales_sum - a.sales_sum);
+        this.isBusy = !this.isBusy;
       });
   },
   computed: {
@@ -255,8 +291,8 @@ export default {
 };
 </script>
 
-<style>
+<style >
 table#table-transition-example .flip-list-move {
-  transition: transform 1s;
+  transition: transform 0.5s;
 }
 </style>

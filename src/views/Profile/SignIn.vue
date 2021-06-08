@@ -38,6 +38,9 @@
         ></b-form-input>
       </b-form-group>
       <b-button type="submit" variant="primary">Sign In</b-button>
+      <br />
+      <br />
+      <router-link :to="{ name: 'signUp' }">or register</router-link>
     </b-form>
   </div>
 </template>

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from decimal import Decimal
 from django.db.models import Q, Sum
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from bs4 import BeautifulSoup
 import requests
 
@@ -53,10 +53,6 @@ class Order(models.Model):
         verbose_name = ("order")
         verbose_name_plural = ("orders")
 
-    # @property
-    # def sum(self):
-    #     return Decimal(self.quantity * self.price)
-
 
 class Product(models.Model):
     subject = models.CharField(max_length=50)
@@ -66,7 +62,7 @@ class Product(models.Model):
     image = models.URLField(max_length=200, blank=True, null=True)
     sebes = models.DecimalField(
         max_digits=8, decimal_places=2, blank=True, null=True)
-    # user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = ("Product")
@@ -142,9 +138,8 @@ class Fee(models.Model):
 
     date = models.DateTimeField()
 
-    # class Meta:
-
 
 class Token(models.Model):
     apiKey = models.TextField()
-    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        "auth.User", on_delete=models.CASCADE, unique=True)

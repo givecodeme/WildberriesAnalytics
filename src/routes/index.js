@@ -7,9 +7,13 @@ Vue.use(Router)
 export default new Router({
     mode: 'history',
     routes: [
+        { path: '*', redirect: '/list' },
         {
             path: '/list',
             name: 'list',
+            meta: {
+                requiresLogin: true
+            },
             component: () => import('@/views/List.vue')
         },
         {
@@ -20,16 +24,22 @@ export default new Router({
         {
             path: '/signup',
             name: 'signUp',
+            meta: { requiresVisitor: true },
             component: () => import('@/views/Profile/SignUp.vue')
         },
         {
             path: '/signin',
             name: 'signIn',
+            meta: {
+                requiresVisitor: true
+            },
             component: () => import('@/views/Profile/SignIn.vue')
         },
         {
             path: '/profile',
             name: 'profile',
+            meta: { requiresLogin: true },
+
             component: () => import('@/views/Profile/Profile.vue'),
             children: [
                 {

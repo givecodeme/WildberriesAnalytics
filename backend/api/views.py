@@ -30,8 +30,9 @@ class ProductFilter(FilterSet):
                 Prefetch(
                     'orders',
                     DateRangeFilter(field_name='date').filter(
-                        Order.objects.all(), value),
-                    # filter(is_cancel=1)
+                        # Order.objects.all(), value),
+                        Order.objects.filter(is_cancel=0), value),
+
                 ),
                 Prefetch(
                     'sales',
@@ -111,6 +112,11 @@ class TokenViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def list(self, request):
+        qs = Token.objects.filter(user=request.user).first()
+        serializer = TokenSerializer(qs)
+        return Response(serializer.data)
+
 
 class SalesViewSet(viewsets.ModelViewSet):
     serializer_class = SalesSerializer
@@ -155,7 +161,6 @@ class ProductsViewSet(viewsets.ModelViewSet):
             'com_set'
         ),
 
-
         Prefetch(
             'sales',
 
@@ -165,7 +170,8 @@ class ProductsViewSet(viewsets.ModelViewSet):
         ),
         Prefetch(
             'orders',
-            Order.objects.filter(is_cancel=1),
+            # Order.objects.all(),
+            Order.objects.filter(is_cancel=0),
             'ret_orders'
         ),
     )
@@ -176,6 +182,9 @@ class ProductsViewSet(viewsets.ModelViewSet):
     # filterset_fields = ('sales_sum', 'price', )
     # ordering_fields = ('sales_sum', "orders_sum")
     filterset_class = ProductFilter
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
     # pagination_class = LargeResultsSetPagination
     # permission_classes = (permissions.IsAuthenticated,)
 
@@ -197,7 +206,7 @@ class FeeViewSet(viewsets.ModelViewSet):
 
 def add_sales(request):
     url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom=2017-03-25T21:00:00.000Z&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw'
-    data = requests.get(url).json()
+    data = requests.get(url).json()[::-1]
     sales = []
     if Sale.objects.exists():
         for sale in data:
@@ -205,17 +214,18 @@ def add_sales(request):
                 sale, created = Sale.objects.get_or_create(
                     product=Product.objects.get_or_create(
                         nmid=sale['nmId'],
-                        subject=sale['subject']
+                        # subject=sale['subject']
                     )[0],
                     price=int(sale['priceWithDisc']),
                     quantity=sale['quantity'],
                     date=sale['date'],
                     odid=sale['odid']
                 )
-            except:
+                if not created:
+                    break
+            except Exception as e:
+                print(e)
                 pass
-            # if not created:
-            #     break
 
     else:
         Sale.objects.bulk_create([
@@ -245,7 +255,7 @@ def add_orders(request):
                 (100-int(sale['discountPercent']))/100,
                 product=Product.objects.get_or_create(
                     nmid=sale['nmId'],
-                    subject=sale['subject']
+                    # subject=sale['subject']
                 )[0],
                 date=sale['date'],
                 odid=sale['odid'],
@@ -254,8 +264,8 @@ def add_orders(request):
             if order.is_cancel != sale['isCancel']:
                 order.is_cancel = 1 if sale['isCancel'] else 0
                 order.save(update_fields=['is_cancel'])
-            # if not created:
-            #     break
+            if not created:
+                break
 
     else:
         Order.objects.bulk_create([
@@ -306,7 +316,6 @@ def add_products(req):
         for stock in stocks:
             if Product.objects.filter(
                 nmid=stock['nmId'],
-                subject=stock['subject']
             ).exists():
                 continue
 
@@ -334,7 +343,9 @@ def add_stocks(request):
     for stock in data:
         stockProd = Stock.objects.get_or_create(
             name=stock['warehouseName'],
-            product=Product.objects.get_or_create(nmid=stock['nmId'])[0]
+            product=Product.objects.get_or_create(
+                # subject=stock['subject'],
+                nmid=stock['nmId'])[0],
         )[0]
         stockProd.quantity = stock['quantity']
         stockProd.save(update_fields=['quantity'])
@@ -372,22 +383,27 @@ def add_stocks(request):
 
 
 def add_comission(req):
-    url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2020-06-01&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw&limit=1000&rrdid=0&dateto=2021-06-30'
-    data = requests.get(url).json()
+    url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2020-06-01&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw&limit=10000&rrdid=0&dateto=2021-06-30'
+    data = requests.get(url).json()[::-1]
 
     if Fee.objects.exists():
         for delivery in data:
             fe, created = Fee.objects.get_or_create(
+                id=delivery['rrd_id'],
                 name=delivery['supplier_oper_name'],
                 delivery=delivery['delivery_rub'],
                 commission=delivery['retail_commission'],
                 product=Product.objects.get_or_create(
-                    nmid=delivery['nm_id'])[0],
+                    nmid=delivery['nm_id']
+                )[0],
                 date=delivery['order_dt']
             )
+            if not created:
+                break
     else:
         Fee.objects.bulk_create([
             Fee(
+                id=delivery['rrd_id'],
                 name=delivery['supplier_oper_name'],
                 delivery=delivery['delivery_rub'],
                 commission=delivery['retail_commission'],
@@ -398,4 +414,10 @@ def add_comission(req):
             for delivery in data
         ])
 
+    return HttpResponse('success')
+
+
+def tess(request):
+    from backend.tasks import hello_world
+    hello_world.delay()
     return HttpResponse('success')
