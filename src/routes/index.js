@@ -7,7 +7,7 @@ Vue.use(Router)
 export default new Router({
     mode: 'history',
     routes: [
-        { path: '*', redirect: '/list' },
+        // { path: '*', redirect: '/list' },
         {
             path: '/list',
             name: 'list',
@@ -15,6 +15,14 @@ export default new Router({
                 requiresLogin: true
             },
             component: () => import('@/views/List.vue')
+        },
+        {
+            path: '/calculator',
+            name: 'calculator',
+            meta: {
+                // requiresLogin: true
+            },
+            component: () => import('@/views/Calculator.vue')
         },
         {
             path: '/tes',

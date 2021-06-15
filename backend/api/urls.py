@@ -4,15 +4,16 @@ from django.urls import include, path
 from rest_framework import routers
 
 from .views import (
-    index_view, SalesViewSet, add_sales,
+    index_view, SalesViewSet,
     OrdersViewSet, ProductsViewSet,
-    StockViewSet, add_orders, add_products, add_stocks
+    StockViewSet,
 )
-from backend.api.views import FeeViewSet, TokenViewSet, add_comission, tess
+from backend.api.views import FeeViewSet, ProductUpdateViewsSet, TokenViewSet
 router = routers.DefaultRouter()
 router.register('sales', SalesViewSet)
 router.register('orders', OrdersViewSet)
 router.register('products', ProductsViewSet)
+router.register('product_update', ProductUpdateViewsSet)
 router.register('stocks', StockViewSet)
 router.register('fees', FeeViewSet)
 router.register('tokens', TokenViewSet)
@@ -21,12 +22,6 @@ router.register('tokens', TokenViewSet)
 urlpatterns = [
     path('', include(router.urls)),
 
-    path('add_sales', add_sales,),
-    path('add_orders', add_orders,),
-    path('add_prod', add_products,),
-    path('add_stocks', add_stocks,),
-    path('add_com', add_comission),
-    path('tess', tess),
 
     path('auth/', include('djoser.urls')),
     path('token/', TokenObtainPairView.as_view()),

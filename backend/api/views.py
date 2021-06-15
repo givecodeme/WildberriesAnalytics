@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from django.views.generic import TemplateView
 from django.views.decorators.cache import never_cache
-from backend.api.serializers import FeeSerializer, OrdersSerializer, ProductsSerializer, SalesSerializer, StockSerializer, TokenSerializer
+from backend.api.serializers import FeeSerializer, OrdersSerializer, ProductUpdateSerializer, ProductsSerializer, SalesSerializer, StockSerializer, TokenSerializer
 import requests
 from django.http.response import HttpResponse
 from backend.api.models import Fee, Order, Product, Stock, Token
@@ -31,14 +31,14 @@ class ProductFilter(FilterSet):
                     'orders',
                     DateRangeFilter(field_name='date').filter(
                         # Order.objects.all(), value),
-                        Order.objects.filter(is_cancel=0), value),
-
+                        Order.objects.filter(
+                            is_cancel=0), value),
                 ),
                 Prefetch(
                     'sales',
                     DateRangeFilter(field_name='date').filter(
+                        # Sale.objects.filter(quantity__gt=0), value),
                         Sale.objects.all(), value),
-                    # filter(quantity__gt=0)
                 ),
                 Prefetch(
                     'stocks',
@@ -58,17 +58,18 @@ class ProductFilter(FilterSet):
                             name='Продажа'), value),
                     'com_set'
                 ),
-                Prefetch(
-                    'sales',
-                    DateRangeFilter(field_name='date').filter(
-                        Sale.objects.filter(
-                            quantity__lt=0), value),
-                    'returns'
-                ),
+                # Prefetch(
+                #     'sales',
+                #     DateRangeFilter(field_name='date').filter(
+                #         Sale.objects.filter(
+                #             quantity__lt=0), value),
+                #     'returns'
+                # ),
                 Prefetch(
                     'orders',
                     DateRangeFilter(field_name='date').filter(
-                        Order.objects.filter(is_cancel=1), value),
+                        Order.objects.filter(
+                            is_cancel=1), value),
                     'ret_orders'
                 ),
                 # Prefetch(
@@ -144,12 +145,22 @@ class ProductsViewSet(viewsets.ModelViewSet):
 
     serializer_class = ProductsSerializer
     queryset = Product.objects.prefetch_related(
-        Prefetch('stocks', Stock.objects.filter(quantity__gt=0)),
-        # 'stocks',
-        'orders', 'sales',
+        Prefetch(
+            'sales',
+            Sale.objects.all()
+        ),
+        Prefetch(
+            'stocks',
+            Stock.objects.filter(
+                quantity__gt=0)
+        ),
+        Prefetch(
+            'orders',
+            Order.objects.filter(
+                is_cancel=0)
+        ),
         Prefetch(
             'fee_set',
-
             Fee.objects.filter(
                 name='Логистика'),
             'delivery_set'
@@ -160,36 +171,35 @@ class ProductsViewSet(viewsets.ModelViewSet):
                 name='Продажа'),
             'com_set'
         ),
-
         Prefetch(
             'sales',
-
             Sale.objects.filter(
                 quantity__lt=0),
             'returns'
         ),
         Prefetch(
             'orders',
-            # Order.objects.all(),
-            Order.objects.filter(is_cancel=0),
+            Order.objects.filter(is_cancel=1),
             'ret_orders'
         ),
     )
-    filter_backends = (
-        DjangoFilterBackend,
-        #    filters.OrderingFilter,
-    )
-    # filterset_fields = ('sales_sum', 'price', )
-    # ordering_fields = ('sales_sum', "orders_sum")
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = ProductFilter
 
-    def get_queryset(self):
-        return super().get_queryset().filter(user=self.request.user)
-    # pagination_class = LargeResultsSetPagination
+    # def get_queryset(self):
+    #     return super().get_queryset().filter(user=self.request.user)
+
     # permission_classes = (permissions.IsAuthenticated,)
 
+    # pagination_class = LargeResultsSetPagination
     # def get_queryset(self):
     # return super().get_queryset().filter(user=self.request.user)
+
+
+class ProductUpdateViewsSet(viewsets.ModelViewSet):
+
+    serializer_class = ProductUpdateSerializer
+    queryset = Product.objects.all()
 
 
 class StockViewSet(viewsets.ModelViewSet):
@@ -202,222 +212,3 @@ class FeeViewSet(viewsets.ModelViewSet):
     serializer_class = FeeSerializer
     queryset = Fee.objects.all()
     # pagination_class = LargeResultsSetPagination
-
-
-def add_sales(request):
-    url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/sales?dateFrom=2017-03-25T21:00:00.000Z&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw'
-    data = requests.get(url).json()[::-1]
-    sales = []
-    if Sale.objects.exists():
-        for sale in data:
-            try:
-                sale, created = Sale.objects.get_or_create(
-                    product=Product.objects.get_or_create(
-                        nmid=sale['nmId'],
-                        # subject=sale['subject']
-                    )[0],
-                    price=int(sale['priceWithDisc']),
-                    quantity=sale['quantity'],
-                    date=sale['date'],
-                    odid=sale['odid']
-                )
-                if not created:
-                    break
-            except Exception as e:
-                print(e)
-                pass
-
-    else:
-        Sale.objects.bulk_create([
-            Sale(
-                product=Product.objects.get_or_create(
-                    nmid=sale['nmId'],
-                    # subject=sale['subject']
-                )[0],
-                price=int(sale['priceWithDisc']),
-                quantity=sale['quantity'],
-                date=sale['date'],
-                odid=sale['odid']
-            ) for sale in data]
-        )
-
-    return HttpResponse('success')
-
-
-def add_orders(request):
-    url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/orders?dateFrom=2017-02-20&flag=0&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw'
-    data = requests.get(url).json()[::-1]
-    if Order.objects.exists():
-        for sale in data:
-            order, created = Order.objects.get_or_create(
-                quantity=sale['quantity'],
-                price=int(sale['totalPrice']) *
-                (100-int(sale['discountPercent']))/100,
-                product=Product.objects.get_or_create(
-                    nmid=sale['nmId'],
-                    # subject=sale['subject']
-                )[0],
-                date=sale['date'],
-                odid=sale['odid'],
-            )
-
-            if order.is_cancel != sale['isCancel']:
-                order.is_cancel = 1 if sale['isCancel'] else 0
-                order.save(update_fields=['is_cancel'])
-            if not created:
-                break
-
-    else:
-        Order.objects.bulk_create([
-            Order(
-                quantity=sale['quantity'],
-                price=sale['totalPrice'] *
-                (100-sale['discountPercent'])/100,
-                product=Product.objects.get_or_create(
-                    nmid=sale['nmId'],
-                    # subject=sale['subject']
-                )[0],
-                date=sale['date'],
-                odid=sale['odid'],
-                is_cancel=1 if sale['isCancel'] else 0
-            ) for sale in data]
-        )
-
-    return HttpResponse('success')
-
-
-def add_products(req):
-
-    from bs4 import BeautifulSoup
-
-    url_stocks = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21:00:00.000Z&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw'
-    stocks = requests.get(url_stocks).json()
-    prods = []
-    created = []
-
-    if not Product.objects.exists():
-        for stock in stocks:
-            if stock['nmId'] in created:
-                continue
-            url = f'https://www.wildberries.ru/catalog/{stock["nmId"]}/detail.aspx'
-            data = requests.get(url).content
-            soup = BeautifulSoup(data, 'lxml')
-
-            prods.append(
-                Product(
-                    subject=stock['subject'],
-                    nmid=stock['nmId'],
-                    image=soup.find('img', class_='preview-photo').attrs['src']
-                ))
-            created.append(stock['nmId'])
-            # time.sleep(1)
-        Product.objects.bulk_create(prods)
-    else:
-        for stock in stocks:
-            if Product.objects.filter(
-                nmid=stock['nmId'],
-            ).exists():
-                continue
-
-            url = f'https://www.wildberries.ru/catalog/{stock["nmId"]}/detail.aspx'
-            data = requests.get(url).content
-            soup = BeautifulSoup(data, 'lxml')
-
-            prod = Product.objects.get_or_create(
-                nmid=stock['nmId'],
-            )[0]
-            prod.subject = stock['subject']
-            prod.image = soup.find(
-                'img', class_='preview-photo').attrs['src'],
-            prod.save(update_fields=['image', 'subject'])
-            time.sleep(1)
-
-    return HttpResponse('success')
-
-
-def add_stocks(request):
-
-    url_stocks = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks?dateFrom=2017-03-25T21:00:00.000Z&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw'
-    data = requests.get(url_stocks).json()
-
-    for stock in data:
-        stockProd = Stock.objects.get_or_create(
-            name=stock['warehouseName'],
-            product=Product.objects.get_or_create(
-                # subject=stock['subject'],
-                nmid=stock['nmId'])[0],
-        )[0]
-        stockProd.quantity = stock['quantity']
-        stockProd.save(update_fields=['quantity'])
-
-    # Stock.objects.bulk_create([
-    #     Stock(
-    #         name=stock['warehouseName'],
-    #         quantity=stock['quantity'],
-    #         product=Product.objects.get(nmid=stock['nmId'])
-    #         # quantityFull=stock['quantityFull'],
-    #         # quantityNotInOrders=stock['quantityNotInOrders'],
-    #     )
-    #     for stock in data
-    # ])
-
-    return HttpResponse('success')
-
-
-# def add_delivery(req):
-#     url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2020-06-01&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw&limit=1000&rrdid=0&dateto=2021-06-30'
-#     data = requests.get(url).json()
-
-#     if Delivery.objects.exists():
-#         pass
-#     else:
-#         Delivery.objects.bulk_create([
-#             Delivery(
-#                 price=delivery['delivery_rub'],
-#                 product=Product.objects.get(nmid=delivery['nm_id']),
-#                 date=delivery['sale_dt']
-#             )
-#             for delivery in data if delivery['supplier_oper_name'] == 'Логистика'
-#         ])
-#     return HttpResponse('success')
-
-
-def add_comission(req):
-    url = 'https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod?dateFrom=2020-06-01&key=YWE3YzFlNWItOWVhZS00OWJiLWJhODQtMDA0N2E0MzFhMWMw&limit=10000&rrdid=0&dateto=2021-06-30'
-    data = requests.get(url).json()[::-1]
-
-    if Fee.objects.exists():
-        for delivery in data:
-            fe, created = Fee.objects.get_or_create(
-                id=delivery['rrd_id'],
-                name=delivery['supplier_oper_name'],
-                delivery=delivery['delivery_rub'],
-                commission=delivery['retail_commission'],
-                product=Product.objects.get_or_create(
-                    nmid=delivery['nm_id']
-                )[0],
-                date=delivery['order_dt']
-            )
-            if not created:
-                break
-    else:
-        Fee.objects.bulk_create([
-            Fee(
-                id=delivery['rrd_id'],
-                name=delivery['supplier_oper_name'],
-                delivery=delivery['delivery_rub'],
-                commission=delivery['retail_commission'],
-                product=Product.objects.get_or_create(
-                    nmid=delivery['nm_id'])[0],
-                date=delivery['order_dt']
-            )
-            for delivery in data
-        ])
-
-    return HttpResponse('success')
-
-
-def tess(request):
-    from backend.tasks import hello_world
-    hello_world.delay()
-    return HttpResponse('success')

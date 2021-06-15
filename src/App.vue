@@ -1,50 +1,6 @@
 <template>
   <div id="">
-    <div>
-      <b-navbar toggleable="lg" type="dark" variant="dark">
-        <b-navbar-brand :to="{ name: 'list' }"
-          >WildberriesAnalytics</b-navbar-brand
-        >
-
-        <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-
-        <b-collapse id="nav-collapse" is-nav>
-          <b-navbar-nav>
-            <b-nav-item :to="{ name: 'token' }">Token</b-nav-item>
-            <!-- <b-nav-item href="#" disabled>Disabled</b-nav-item> -->
-          </b-navbar-nav>
-          <!-- Right aligned nav items -->
-          <b-navbar-nav class="ml-auto">
-            <b-nav-item-dropdown right>
-              <!-- Using 'button-content' slot -->
-              <template #button-content>
-                <em>User</em>
-              </template>
-              <b-dropdown-item v-if="isLoggedIn" :to="{ name: 'profile' }"
-                >Profile</b-dropdown-item
-              ><b-dropdown-item v-if="isLoggedIn" @click="logout()"
-                >Log Out</b-dropdown-item
-              >
-              <b-dropdown-item
-                v-if="!isLoggedIn"
-                :to="{
-                  name: 'signIn',
-                }"
-                >Sign In</b-dropdown-item
-              >
-
-              <b-dropdown-item
-                v-if="!isLoggedIn"
-                :to="{
-                  name: 'signUp',
-                }"
-                >Register</b-dropdown-item
-              >
-            </b-nav-item-dropdown>
-          </b-navbar-nav>
-        </b-collapse>
-      </b-navbar>
-    </div>
+    <nav-bar />
 
     <b-container fluid id="app">
       <router-view />
@@ -55,18 +11,12 @@
 <script>
 // import Card from "@/components/Card.vue";
 
-import { mapGetters, mapActions } from "vuex";
+import NavBar from "./components/NavBar.vue";
 
 export default {
+  components: { NavBar },
   name: "App",
-  // components: { Card },
   data: () => ({}),
-  methods: {
-    ...mapActions(["logout"]),
-  },
-  computed: {
-    ...mapGetters(["isLoggedIn"]),
-  },
 };
 </script>
 
@@ -87,6 +37,13 @@ export default {
 .page-item.active .page-link {
   background-color: #28a745;
   border-color: #28a745;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 </style>
 

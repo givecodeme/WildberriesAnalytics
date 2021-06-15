@@ -2,7 +2,7 @@
   <div class="">
     <b-row>
       <b-col>
-        <b-jumbotron header="Заказали">
+        <b-jumbotron bg-variant="warning" header="Заказали">
           <p>На сумму: {{ orders | format }} р.</p>
           Кол-во: {{ orders_qnt }} шт.
         </b-jumbotron>
@@ -22,8 +22,13 @@
           commissions: {{ commissions | format }} р.
         </b-jumbotron>
       </b-col>
+      <b-col>
+        <b-jumbotron header="Доходы">
+          {{ incomes | format }} р.
+        </b-jumbotron>
+      </b-col>
     </b-row>
-    <h1>Products</h1>
+    <!-- <h1>Products</h1> -->
     <b-button
       variant="outline-success"
       @click="$router.push({ query: { date: 'today' } })"
@@ -49,7 +54,8 @@
       @click="$router.push({ query: { date: 'year' } })"
       >year</b-button
     >
-    <b-container>
+    <b-container fluid  >
+
       <!-- <b-button @click="sortBy('orders_sum')">sort by orders</b-button>
       <b-button @click="sortBy('sales_sum')">sort by sales</b-button> -->
       <!-- <card
@@ -57,18 +63,67 @@
         :key="index"
         :product="product"
       /> -->
+    <md-table
+     v-model="products"
+      md-sort="sales_sum"
+       md-sort-order="desc"
+        md-card 
+      md-fixed-header
+    >
+      <md-table-toolbar>
+        <h1 class="md-title">Products</h1>
+        <p>
+          
+          <md-field
+          >
+            <label>Налоговая ставка</label>
+            <md-input
+            style="width:100px"
+          v-model="tax"
+          @input="updateTax"
+          />
+            <span class="md-suffix">%</span>
 
-      <b-table
-        id="table-transition-example"
-        class="mt-3"
-        :tbody-transition-props="transProps"
-        :fields="fields"
-        :items="products"
-        primary-key="nmid"
-        hover
-        striped
-        :busy="isBusy"
-      >
+          </md-field>
+        </p>
+      </md-table-toolbar>
+
+      <card
+      :tax="tax"
+      v-show="!loading"
+      v-for="product in products"
+      :key="product.id"
+      :product="product"
+      />
+
+
+  <!-- <md-table-row slot="md-table-row" slot-scope="{ item }">
+
+    <md-table-cell md-label="ID" md-sort-by="id" md-numeric>{{
+      item.id
+    }}</md-table-cell>
+
+    <md-table-cell md-label="Name" md-sort-by="name">{{
+      item.image
+    }}</md-table-cell>
+    <md-table-cell md-label="Orders" md-sort-by="orders_sum">{{
+      item.orders_sum
+    }}</md-table-cell>
+    <md-table-cell md-label="Sales" md-sort-by="sales_sum">{{
+      item.sales_sum
+    }}</md-table-cell>
+  </md-table-row> -->
+<!-- :item="{item}" -->
+      <!-- <md-table-row slot="md-table-row" slot-scope="{ item }" > -->
+            <!-- <md-table md-card>
+
+        <md-table-cell md-label="ID" md-sort-by="id" md-numeric>{{ item.id }}</md-table-cell>
+        <md-table-cell md-label="Name" md-sort-by="image">{{ item.image }}</md-table-cell> -->
+      <!-- </md-table-row> -->
+      <!-- </md-table> -->
+    </md-table>
+          <md-progress-spinner v-show="loading" md-mode="indeterminate"></md-progress-spinner>
+
         <!-- <br />
           <span v-for="(stock, index) in data.item.stocks" :key="index">
             {{ stock.name }} - {{ stock.quantity }} шт.
@@ -104,16 +159,12 @@
         <template #cell(image)="data">
           <img :src="data.value" height="100" />
           <br />
-          <a :href="data.item.wb_url" target="_blank"> {{ data.item.nmid }}</a>
+          <a :href="data.item.wb_url" target="_blank"> {{ data.item.id }}</a>
         </template>
 
         <template #cell(income)="data">
-          {{ data.value | format }} р.
-          <!-- <dohod
-            :sales="data.item.sales_sum"
-            :tax="data.item.delivery_sum + data.item.com_sum"
-            :sebes="data.item.sebes * data.item.sales_qnt"
-          /> -->
+          {{ data.value | format }}
+          <span v-if="Number.isInteger(data.value)">р.</span>
         </template>
 
         <template #table-busy>
@@ -130,9 +181,9 @@
 <script>
 import axios from "axios";
 import api from "@/services/api";
-import Card from "@/components/Card.vue";
 import Sebes from "../components/Sebes.vue";
 import Dohod from "../components/Dohod.vue";
+import Card from "../components/Card.vue";
 // import Sebes from "@/components/Sebes.vue";
 // import api from "@/services/api";
 export default {
@@ -143,7 +194,9 @@ export default {
   data() {
     return {
       products: [],
-      date: this.$route.query.date || "",
+      tax: localStorage.getItem("tax") || 6,
+      loading: true,
+      date: this.$route.query.date || null,
       isBusy: true,
       transProps: {
         // Transition name
@@ -198,14 +251,17 @@ export default {
           key: "income",
           label: "Доход",
           sortable: true,
-          formatter: (value, key, item) =>
-            (
-              item.sales_sum -
-              item.delivery_sum -
-              item.com_sum -
-              item.sebes * item.sales_qnt -
-              item.sales_sum * 0.06
-            ).toFixed(0),
+          formatter: (value, key, item) => {
+            if (item.sebes) {
+              return (
+                item.sales_sum -
+                item.delivery_sum -
+                item.com_sum -
+                item.sebes * item.sales_qnt -
+                item.sales_sum * 0.06
+              ).toFixed(0);
+            } else return "Input sebes";
+          },
           sortByFormatted: true,
 
           // this.sales - this.tax - this.sales * 0.06 - this.sebes
@@ -217,6 +273,7 @@ export default {
   watch: {
     "$route.query.date"(date) {
       this.isBusy = !this.isBusy;
+      this.loading = !this.loading;
 
       axios
         .get("products/", {
@@ -231,6 +288,7 @@ export default {
         .then((result) => {
           this.products = result.data.sort((a, b) => b.sales_sum - a.sales_sum);
           this.isBusy = !this.isBusy;
+          this.loading = !this.loading;
         });
     },
 
@@ -252,6 +310,11 @@ export default {
     // },
   },
 
+  methods: {
+    updateTax() {
+      localStorage.setItem("tax", this.tax);
+    },
+  },
   mounted() {
     api
       .get("products/", {
@@ -263,6 +326,7 @@ export default {
       .then((result) => {
         this.products = result.data.sort((a, b) => b.sales_sum - a.sales_sum);
         this.isBusy = !this.isBusy;
+        this.loading = !this.loading;
       });
   },
   computed: {
@@ -286,6 +350,9 @@ export default {
     },
     fees() {
       return this.commissions + this.deliveries;
+    },
+    incomes() {
+      return this.products.reduce((sum, item) => sum + +item.income, 0);
     },
   },
 };

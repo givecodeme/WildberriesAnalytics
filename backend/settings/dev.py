@@ -35,10 +35,10 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',  # < Per Whitenoise, to disable built in
     'django.contrib.staticfiles',
     'debug_toolbar',
-    # 'backend.api.apps.ApiConfig',
+    'backend.api.apps.ApiConfig',
+    # 'backend.api',
     # 'api.ap5ps.ApiConfig',
-    # 'rest_framework',
-    'backend.api',
+    'rest_framework',
     'corsheaders',
     'django_extensions',
     'django_filters',

@@ -5,8 +5,8 @@
 </template>
 
 <script>
-import axios from "axios";
-import { api } from "@/services/api";
+// import axios from "axios";
+import api from "@/services/api";
 export default {
   props: ["prod_id", "prop_sebes"],
   data() {
@@ -19,12 +19,17 @@ export default {
     updateSebes() {
       // axios.defaults.headers.common["Authorization"] =
       //   localStorage.getItem("token");
-
-      axios
-        .patch(`products/${this.prod_id}/`, {
+      api
+        .patch(`product_update/${this.prod_id}/`, {
           sebes: Number(this.sebes),
         })
-        .then(() => console.log("success"));
+        .then(() =>
+          this.$bvToast.toast(`Product №${this.prod_id} update`, {
+            title: "Success",
+            variant: "success",
+            autoHideDelay: 3000,
+          })
+        );
     },
   },
 };

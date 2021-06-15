@@ -19,8 +19,11 @@ Vue.use(ToastPlugin)
 
 Vue.config.productionTip = false
 
+import VueMaterial from 'vue-material'
+import 'vue-material/dist/vue-material.min.css'
+import 'vue-material/dist/theme/default.css'
 
-
+Vue.use(VueMaterial)
 
 router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresLogin)) {

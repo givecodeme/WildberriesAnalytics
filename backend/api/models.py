@@ -7,13 +7,6 @@ from bs4 import BeautifulSoup
 import requests
 
 
-def pre_save_product(sender, instance, *arggs, **kwargs):
-    url = f'https://www.wildberries.ru/catalog/{instance.nmid}/detail.aspx'
-    data = requests.get(url).content
-    soup = BeautifulSoup(data, 'lxml')
-    instance.image = soup.find('img', class_='preview-photo').attrs['src']
-
-
 class Sale(models.Model):
 
     quantity = models.IntegerField()
@@ -56,12 +49,14 @@ class Order(models.Model):
 
 class Product(models.Model):
     subject = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     # category =
-    nmid = models.IntegerField(unique=True, db_index=True)
+    # nmid = models.IntegerField(unique=True, db_index=True)
     # brand = models.ForeignKey("Brand", on_delete=models.CASCADE)
     image = models.URLField(max_length=200, blank=True, null=True)
     sebes = models.DecimalField(
         max_digits=8, decimal_places=2, blank=True, null=True)
+    barcode = models.CharField(max_length=50)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
 
     class Meta:
@@ -69,44 +64,41 @@ class Product(models.Model):
         verbose_name_plural = ("Products")
 
     def orders_sum(self):
-        return sum(map(lambda order: order.quantity * order.price, self.orders.all()))
+        return sum([order.price for order in self.orders.all()])
 
     def orders_qnt(self):
-        return sum(map(lambda order: order.quantity, self.orders.all()))
+        return sum([order.quantity for order in self.orders.all()])
 
     def sales_sum(self):
-        return sum(map(lambda sale: sale.quantity * sale.price, self.sales.all()))
+        return sum([sale.price for sale in self.sales.all()])
 
     def sales_qnt(self):
-        return abs(sum(map(lambda sale: sale.quantity, self.sales.all())))
+        return sum([sale.quantity for sale in self.sales.all()])
 
     def stocks_qnt(self):
-        return sum(map(lambda stock: stock.quantity, self.stocks.all()))
+        return sum([stock.quantity for stock in self.stocks.all()])
 
     def delivery_sum(self):
-        return sum(map(lambda delivery: delivery.delivery, self.delivery_set))
+        return sum([delivery.delivery for delivery in self.delivery_set])
 
     def com_sum(self):
-        return sum(map(lambda com: com.commission, self.com_set))
+        return sum([com.commission for com in self.com_set])
 
-    def return_sum(self):
-        return abs(sum(map(lambda ret: ret.quantity, self.returns)))
+    # def return_sales(self):
+    #     return abs(sum(map(lambda ret: ret.quantity, self.returns)))
 
     def return_orders(self):
         return abs(sum(map(lambda ret: ret.quantity, self.ret_orders)))
 
     def per_sale(self):
-        if self.sales_qnt() == 0:
-            return 0
+        # if self.sales_qnt() == 0:
+        #     return 0
         if self.return_orders():
-            return 100 - self.return_orders() / self.sales_qnt() * 100
+            return 100 - self.return_orders() / self.orders_qnt() * 100 if self.orders_qnt() else 0
         return 100
 
     def wb_url(self):
-        return f"https://www.wildberries.ru/catalog/{self.nmid}/detail.aspx"
-
-
-pre_save.connect(pre_save_product, sender=Product)
+        return f"https://www.wildberries.ru/catalog/{self.id}/detail.aspx"
 
 
 class Stock(models.Model):
@@ -142,4 +134,4 @@ class Fee(models.Model):
 class Token(models.Model):
     apiKey = models.TextField()
     user = models.ForeignKey(
-        "auth.User", on_delete=models.CASCADE, unique=True)
+        "auth.User", on_delete=models.CASCADE)

@@ -26,7 +26,7 @@
       <img :src="data.value" height="100" />
       <br />
       <a :href="data.item.wb_url" target="_blank" rel="noopener noreferrer">
-        {{ data.item.nmid }}</a
+        {{ data.item.id }}</a
       >
     </template>
   </div>

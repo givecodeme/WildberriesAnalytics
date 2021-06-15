@@ -55,6 +55,12 @@ class TokenSerializer(ModelSerializer):
         fields = ('apiKey', 'id', )
 
 
+class ProductUpdateSerializer(ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
 class ProductsSerializer(ModelSerializer):
     stocks = StockProductSerializer(many=True)
     # orders = OrderProductSerializer(many=True)
@@ -71,7 +77,7 @@ class ProductsSerializer(ModelSerializer):
     delivery_sum = serializers.IntegerField()
     com_sum = serializers.IntegerField()
 
-    return_sum = serializers.IntegerField()
+    return_orders = serializers.IntegerField()
     per_sale = serializers.IntegerField()
 
     return_orders = serializers.IntegerField()
