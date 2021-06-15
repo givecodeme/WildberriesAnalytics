@@ -25,4 +25,4 @@ django-celery-results = "*"
 django-debug-toolbar="*"    
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
