@@ -34,21 +34,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',  # < Per Whitenoise, to disable built in
     'django.contrib.staticfiles',
-    'debug_toolbar',
-    'backend.api.apps.ApiConfig',
+    'backend.api.apps.AppConfig',
+    # 'backend.api.apps.AppConfig',
     # 'backend.api',
-    # 'api.ap5ps.ApiConfig',
+    'debug_toolbar',
     'rest_framework',
     'corsheaders',
     'django_extensions',
     'django_filters',
-
     'djoser',
     'rest_framework.authtoken',
-
-    # 'django_celery_beat',
+    'django_celery_beat',
     'django_celery_results'
-
 ]
 
 MIDDLEWARE = [

@@ -21,7 +21,6 @@ celery = {extras = ["redis"], version = "*"}
 django-celery-beat = "*"
 django-celery-results = "*"
 django-debug-toolbar="*"    
-djoser = "*"
 
 [dev-packages]
 

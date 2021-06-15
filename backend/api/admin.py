@@ -9,5 +9,5 @@ admin.site.register(Token)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    search_fields = ['barcode', 'nmid']
+    search_fields = ['barcode']
     autocomplete_fields = ['user']
