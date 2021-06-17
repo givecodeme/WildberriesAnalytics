@@ -7,9 +7,6 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
 
-// import axios from 'axios'
-// axios.defaults.baseURL = '/api/'
-
 import store from '@/store'
 import router from '@/routes'
 
