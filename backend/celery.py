@@ -12,28 +12,28 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    # "update_stock": {
-    #     "task": "backend.tasks.update_stock",
-    #     # "schedule": crontab(hour="*/3", minute='30'),
-    # "schedule": 30.0,
-    # },
-    # "update_sales": {
-    #     "task": "backend.tasks.update_sales",
-    #     # "schedule": crontab(minute="*/30"),
-    #     "schedule": crontab(hour="*/3"),
-    #     # "schedule": 30.0,
-    # },
+    "update_stock": {
+        "task": "backend.tasks.update_stock",
+        # "schedule": crontab(hour="*/3", minute='30'),
+        "schedule": 30.0,
+    },
+    "update_sales": {
+        "task": "backend.tasks.update_sales",
+        # "schedule": crontab(minute="*/30"),
+        # "schedule": crontab(hour="*/3"),
+        "schedule": 30.0,
+    },
     "update_orders": {
         "task": "backend.tasks.update_orders",
         # "schedule": crontab(minute="*/30"),
         # "schedule": crontab(hour="*/3"),
         "schedule": 30.0,
     },
-    # "update_comissions": {
-    #     "task": "backend.tasks.update_comissions",
-    #     "schedule": crontab(hour="*/3"),
-    #     # "schedule": 30.0,
-    # },
+    "update_comissions": {
+        "task": "backend.tasks.update_comissions",
+        "schedule": crontab(hour="*/3"),
+        "schedule": 30.0,
+    },
 }
 
 

@@ -8,7 +8,7 @@
 
 <script>
 import api from "@/services/api";
-import axios from "axios";
+// import axios from "axios";
 export default {
   data: () => ({
     token: {
@@ -30,31 +30,23 @@ export default {
       // });
       // .then((res) => (this.user = res.data));
       if (!this.token.id) {
-        axios.post(
-          "tokens/",
-          {
-            apiKey: this.token.apiKey,
-          },
-          {
-            headers: {
-              Authorization: localStorage.getItem("token"),
-            },
-          }
-        );
+        api.post("tokens/", {
+          apiKey: this.token.apiKey,
+        });
       }
     },
     updateToken() {
       axios.defaults.xsrfHeaderName = "X-CSRFToken";
       axios.defaults.xsrfCookieName = "csrftoken";
 
-      axios.patch(`tokens/${this.token.id}/`, {
+      api.patch(`tokens/${this.token.id}/`, {
         apiKey: this.token.apiKey,
       });
     },
   },
 
   mounted() {
-    axios
+    api
       .get("tokens/", {
         headers: {
           Authorization: localStorage.getItem("token"),

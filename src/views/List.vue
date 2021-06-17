@@ -23,9 +23,7 @@
         </b-jumbotron>
       </b-col>
       <b-col>
-        <b-jumbotron header="Доходы">
-          {{ incomes | format }} р.
-        </b-jumbotron>
+        <b-jumbotron header="Доходы"> {{ incomes | format }} р. </b-jumbotron>
       </b-col>
     </b-row>
     <!-- <h1>Products</h1> -->
@@ -54,8 +52,7 @@
       @click="$router.push({ query: { date: 'year' } })"
       >year</b-button
     >
-    <b-container fluid  >
-
+    <b-container fluid>
       <!-- <b-button @click="sortBy('orders_sum')">sort by orders</b-button>
       <b-button @click="sortBy('sales_sum')">sort by sales</b-button> -->
       <!-- <card
@@ -63,41 +60,33 @@
         :key="index"
         :product="product"
       /> -->
-    <md-table
-     v-model="products"
-      md-sort="sales_sum"
-       md-sort-order="desc"
-        md-card 
-      md-fixed-header
-    >
-      <md-table-toolbar>
-        <h1 class="md-title">Products</h1>
-        <p>
-          
-          <md-field
-          >
-            <label>Налоговая ставка</label>
-            <md-input
-            style="width:100px"
-          v-model="tax"
-          @input="updateTax"
-          />
-            <span class="md-suffix">%</span>
+      <md-table
+        v-model="products"
+        md-sort="sales_sum"
+        md-sort-order="desc"
+        md-card
+        md-fixed-header
+      >
+        <md-table-toolbar>
+          <h1 class="md-title">Products</h1>
+          <p>
+            <md-field>
+              <label>Налоговая ставка</label>
+              <md-input style="width: 100px" v-model="tax" @input="updateTax" />
+              <span class="md-suffix">%</span>
+            </md-field>
+          </p>
+        </md-table-toolbar>
 
-          </md-field>
-        </p>
-      </md-table-toolbar>
+        <card
+          :tax="tax"
+          v-show="!loading"
+          v-for="product in products"
+          :key="product.id"
+          :product="product"
+        />
 
-      <card
-      :tax="tax"
-      v-show="!loading"
-      v-for="product in products"
-      :key="product.id"
-      :product="product"
-      />
-
-
-  <!-- <md-table-row slot="md-table-row" slot-scope="{ item }">
+        <!-- <md-table-row slot="md-table-row" slot-scope="{ item }">
 
     <md-table-cell md-label="ID" md-sort-by="id" md-numeric>{{
       item.id
@@ -113,73 +102,74 @@
       item.sales_sum
     }}</md-table-cell>
   </md-table-row> -->
-<!-- :item="{item}" -->
-      <!-- <md-table-row slot="md-table-row" slot-scope="{ item }" > -->
-            <!-- <md-table md-card>
+        <!-- :item="{item}" -->
+        <!-- <md-table-row slot="md-table-row" slot-scope="{ item }" > -->
+        <!-- <md-table md-card>
 
         <md-table-cell md-label="ID" md-sort-by="id" md-numeric>{{ item.id }}</md-table-cell>
         <md-table-cell md-label="Name" md-sort-by="image">{{ item.image }}</md-table-cell> -->
-      <!-- </md-table-row> -->
-      <!-- </md-table> -->
-    </md-table>
-          <md-progress-spinner v-show="loading" md-mode="indeterminate"></md-progress-spinner>
+        <!-- </md-table-row> -->
+        <!-- </md-table> -->
+      </md-table>
+      <md-progress-spinner
+        v-show="loading"
+        md-mode="indeterminate"
+      ></md-progress-spinner>
 
-        <!-- <br />
+      <!-- <br />
           <span v-for="(stock, index) in data.item.stocks" :key="index">
             {{ stock.name }} - {{ stock.quantity }} шт.
             <br />
           </span> -->
 
-        <template #cell(stocks_qnt)="data"> {{ data.value }} шт. </template>
+      <template #cell(stocks_qnt)="data"> {{ data.value }} шт. </template>
 
-        <template #cell(orders_sum)="data">
-          {{ data.value | format }} р.
-          <p>{{ data.item.orders_qnt }} шт.</p>
-        </template>
+      <template #cell(orders_sum)="data">
+        {{ data.value | format }} р.
+        <p>{{ data.item.orders_qnt }} шт.</p>
+      </template>
 
-        <template #cell(tax)="data">
-          {{ data.value | format }} р.
+      <template #cell(tax)="data">
+        {{ data.value | format }} р.
 
-          <!-- доставка - {{ data.item.delivery_sum | format }} р.
+        <!-- доставка - {{ data.item.delivery_sum | format }} р.
           <br />
           комиссия - {{ data.item.com_sum | format }} р. -->
-        </template>
+      </template>
 
-        <template #cell(sales_sum)="data">
-          {{ data.value | format }} р.
-          <p>{{ data.item.sales_qnt }} шт.</p>
-        </template>
+      <template #cell(sales_sum)="data">
+        {{ data.value | format }} р.
+        <p>{{ data.item.sales_qnt }} шт.</p>
+      </template>
 
-        <template #cell(sebes)="data">
-          <div class="">
-            <sebes :prod_id="data.item.id" :prop_sebes="data.value" />
-          </div>
-        </template>
+      <template #cell(sebes)="data">
+        <div class="">
+          <sebes :prod_id="data.item.id" :prop_sebes="data.value" />
+        </div>
+      </template>
 
-        <template #cell(image)="data">
-          <img :src="data.value" height="100" />
-          <br />
-          <a :href="data.item.wb_url" target="_blank"> {{ data.item.id }}</a>
-        </template>
+      <template #cell(image)="data">
+        <img :src="data.value" height="100" />
+        <br />
+        <a :href="data.item.wb_url" target="_blank"> {{ data.item.id }}</a>
+      </template>
 
-        <template #cell(income)="data">
-          {{ data.value | format }}
-          <span v-if="Number.isInteger(data.value)">р.</span>
-        </template>
+      <template #cell(income)="data">
+        {{ data.value | format }}
+        <span v-if="Number.isInteger(data.value)">р.</span>
+      </template>
 
-        <template #table-busy>
-          <div class="text-center text-danger my-2">
-            <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
-          </div>
-        </template>
-      </b-table>
+      <template #table-busy>
+        <div class="text-center text-danger my-2">
+          <b-spinner class="align-middle"></b-spinner>
+          <strong>Loading...</strong>
+        </div>
+      </template>
     </b-container>
   </div>
 </template>
 
 <script>
-import axios from "axios";
 import api from "@/services/api";
 import Sebes from "../components/Sebes.vue";
 import Dohod from "../components/Dohod.vue";
@@ -275,7 +265,7 @@ export default {
       this.isBusy = !this.isBusy;
       this.loading = !this.loading;
 
-      axios
+      api
         .get("products/", {
           params: {
             date: date,
